@@ -1,7 +1,5 @@
-{ nixpkgs ? ./nixpkgs.nix }:
-with import nixpkgs {};
+{
+  pkgs ? (import ./nixpkgs.nix {})
+}:
 
-haskellPackages.developPackage {
-  root = ./.;
-  name = "githud";
-}
+pkgs.haskellPackages.callCabal2nix "githud" ./. {}
