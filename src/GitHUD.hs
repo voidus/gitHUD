@@ -2,12 +2,11 @@
 
 module GitHUD (
     githud,
-    githudd
     ) where
 
 import Control.Monad (unless, void, when)
 import Control.Monad.Reader (runReader)
-import Data.Text
+import Data.Text (pack, strip, unpack)
 import System.Directory (getCurrentDirectory)
 import System.Environment (getArgs)
 import System.Exit (ExitCode(ExitSuccess))
@@ -17,7 +16,6 @@ import System.Process (readProcessWithExitCode)
 
 import GitHUD.Config.Parse
 import GitHUD.Config.Types
-import GitHUD.Daemon.Runner
 import GitHUD.Terminal.Prompt
 import GitHUD.Terminal.Types
 import GitHUD.Git.Parse.Base
@@ -32,17 +30,11 @@ githud = do
     shell <- processArguments getArgs
     config <- getAppConfig
     curDir <- getCurrentDirectory
-    runFetcherDaemon curDir
     repoState <- getGitRepoState
     let prompt = runReader buildPromptWithConfig $ buildOutputConfig shell repoState config
 
     -- Necessary to use putStrLn to properly terminate the output (needs the CR)
     putStrLn $ unpack (strip (pack prompt))
-
-    where
-      runFetcherDaemon dir = do
-        (code, out, err) <- readProcessWithExitCode "githudd" [dir] ""
-        unless (Prelude.null err) (putStrLn $ "Issue with githudd: " ++ err)
 
 processArguments :: IO [String]
                  -> IO Shell
@@ -64,14 +56,3 @@ getAppConfig = do
   if configFilePresent
     then parseConfigFile configFilePath
     else return defaultConfig
-
-githudd :: IO()
-githudd = do
-  mArg <- processDaemonArguments <$> getArgs
-  config <- getAppConfig
-  runDaemon config mArg
-
-processDaemonArguments :: [String]
-                       -> Maybe String
-processDaemonArguments [] = Nothing
-processDaemonArguments (fst:_) = Just fst

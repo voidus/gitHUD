@@ -5,7 +5,6 @@ module Test.GitHUD.Config.Parse (
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import System.Posix.Daemon (Redirection(DevNull, ToFile))
 import Text.Parsec (parse)
 import Text.Parsec.String (Parser)
 
@@ -21,7 +20,6 @@ configParserTests = testGroup "Config Parser Test"
     , testColorConfigToColor
     , testIntensityConfigToIntensity
     , testStringConfigToStringList
-    , testStringConfigToRedirection
     , testBoolConfigToBool
     , testIntConfigToInt
   ]
@@ -447,36 +445,6 @@ testConfigItemFolder = testGroup "#configItemFolder"
           toBeInField confStashSuffixIntensity $
             forConfigItemKey "stash_suffix_intensity" $
               withValue "Dull"
-
-    , testCase "Key: run_fetcher_daemon" $
-        expectValue True $
-          toBeInField confRunFetcherDaemon $
-            forConfigItemKey "run_fetcher_daemon" $
-              withValue "True"
-
-    , testCase "Key: githudd_sleep_seconds" $
-        expectValue 5 $
-          toBeInField confGithuddSleepSeconds $
-            forConfigItemKey "githudd_sleep_seconds" $
-              withValue "5"
-
-    , testCase "Key: githudd_pid_file_path" $
-        expectValue "/tmp" $
-          toBeInField confGithuddPidFilePath $
-            forConfigItemKey "githudd_pid_file_path" $
-              withValue "/tmp"
-
-    , testCase "Key: githudd_socket_file_path" $
-        expectValue "/tmp" $
-          toBeInField confGithuddSocketFilePath $
-            forConfigItemKey "githudd_socket_file_path" $
-              withValue "/tmp"
-
-    , testCase "Key: githudd_log_file_path" $
-        expectValue DevNull $
-          toBeInField confGithuddLogFilePath $
-            forConfigItemKey "githudd_log_file_path" $
-              withValue "/dev/null"
   ]
 
 expectValue :: (Eq a, Show a) => a -> a -> Assertion
@@ -527,15 +495,6 @@ testStringConfigToStringList = testGroup "#stringConfigToStringList"
 
     , testCase "valid string list, comma separated, finish with comma" $
         stringConfigToStringList "foo,bar, " @?= ["foo", "bar"]
-  ]
-
-testStringConfigToRedirection :: TestTree
-testStringConfigToRedirection = testGroup "#strConfigToRedirection"
-  [   testCase "dev null" $
-        strConfigToRedirection "/dev/null" @?= DevNull
-
-    , testCase "other path" $
-        strConfigToRedirection "/foo/bar" @?= ToFile "/foo/bar"
   ]
 
 testBoolConfigToBool :: TestTree

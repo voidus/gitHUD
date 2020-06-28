@@ -8,14 +8,11 @@ module GitHUD.Config.Parse (
   , colorConfigToColor
   , intensityConfigToIntensity
   , stringConfigToStringList
-  , redirectionParser
-  , strConfigToRedirection
   , boolConfigToBool
   , intConfigToInt
   ) where
 
 import Control.Monad (void, when)
-import System.Posix.Daemon (Redirection(ToFile, DevNull))
 import Text.Parsec (parse)
 import Text.Parsec.Char (anyChar, char, digit, newline, noneOf, letter, spaces, string)
 import Text.Parsec.Combinator (choice, eof, many1, manyTill, optional, sepBy)
@@ -209,17 +206,6 @@ configItemsFolder conf (Item "stash_suffix_color" value) =
 configItemsFolder conf (Item "stash_suffix_intensity" value) =
   conf { confStashSuffixIntensity = intensityConfigToIntensity value }
 
-configItemsFolder conf (Item "run_fetcher_daemon" value) =
-  conf { confRunFetcherDaemon = boolConfigToBool value }
-configItemsFolder conf (Item "githudd_sleep_seconds" value) =
-  conf { confGithuddSleepSeconds = intConfigToInt value }
-configItemsFolder conf (Item "githudd_pid_file_path" value) =
-  conf { confGithuddPidFilePath = value }
-configItemsFolder conf (Item "githudd_socket_file_path" value) =
-  conf { confGithuddSocketFilePath = value }
-configItemsFolder conf (Item "githudd_log_file_path" value) =
-  conf { confGithuddLogFilePath = strConfigToRedirection value }
-
 configItemsFolder conf _ = conf
 
 colorConfigToColor :: String -> Color
@@ -320,17 +306,3 @@ boolConfigToBool str =
     (const False)
     id
     (parse boolParser "" str)
-
-strConfigToRedirection :: String -> Redirection
-strConfigToRedirection str =
-  either
-    (const DevNull)
-    id
-    (parse redirectionParser "" str)
-
-redirectionParser :: Parser Redirection
-redirectionParser =
-  choice [
-    try (string "/dev/null") >> return DevNull
-  , ToFile <$> many1 anyChar
-  ] <?> "Redirection"
